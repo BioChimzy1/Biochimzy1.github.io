@@ -6,6 +6,7 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
+    font-size:2rem;
 }
 
 .quote-container {
@@ -14,7 +15,6 @@ body {
 
 #quote-text {
     color: blue;
-    font-size: 24px;
     margin : 0 2rem 0 2rem;
 }
 
