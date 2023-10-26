@@ -26,4 +26,6 @@ body {
     margin-top: 20px;
     cursor: pointer;
     font-size:8rem;
+    width:200px;
+    height:75px;
 }
