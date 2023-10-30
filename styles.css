@@ -6,7 +6,6 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
-    font-size:4rem;
 }
 
 .quote-container {
@@ -25,7 +24,6 @@ body {
     padding: 10px 20px;
     margin-top: 20px;
     cursor: pointer;
-    font-size:4rem;
     width:200px;
     height:75px;
 }
