@@ -35,20 +35,27 @@ Quote.prototype.requestYourQuote = function () {
   let counter = 0;
 
   getQuoteButton.addEventListener("click", () => {
-    fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://api.quotable.io/random'))
-      .then(response => response.json())
+    const apiUrl = "https://api.quotable.io/random";
+    const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(apiUrl);
+
+    fetch(proxyUrl)
+      .then(response => {
+        if (!response.ok) throw new Error("Network response was not ok.");
+        return response.json();
+      })
       .then(data => {
-        const randomQuote = JSON.parse(data.contents).content;
-        quoteText.textContent = randomQuote;
+        const parsedData = JSON.parse(data.contents);
+        quoteText.textContent = parsedData.content;
         counter++;
         myCounter.textContent = counter;
       })
       .catch(error => {
         quoteText.textContent = "Error: " + error.message;
-        console.error("Fetch Error:", error);
+        console.error("Error fetching quote:", error);
       });
   });
 };
 
 const q = new Quote();
 q.requestYourQuote();
+
