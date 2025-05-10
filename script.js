@@ -1,4 +1,4 @@
-const API_KEY = "YOUR_PIXABAY_API_KEY"; // Replace with your actual API key
+const API_KEY = "50204986-67477f644c1d8bbc1b6cc8633"; // Replace with your actual API key
 const searchBtn = document.getElementById("search-btn");
 const searchInput = document.getElementById("search-input");
 const resultsDiv = document.getElementById("results");
