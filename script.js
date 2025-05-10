@@ -3,15 +3,22 @@ const searchBtn = document.getElementById("search-btn");
 const searchInput = document.getElementById("search-input");
 const resultsDiv = document.getElementById("results");
 
-searchBtn.addEventListener("click", () => {
-  const query = searchInput.value.trim();
-  if (!query) return;
+function fetchImages(query) {
+  resultsDiv.innerHTML = "Loading...";
 
   fetch(`https://pixabay.com/api/?key=${API_KEY}&q=${encodeURIComponent(query)}&image_type=photo`)
-    .then(res => res.json())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json();
+    })
     .then(data => {
+      console.log(data); // Debug output
+
       resultsDiv.innerHTML = "";
-      if (data.hits.length === 0) {
+
+      if (!data.hits || data.hits.length === 0) {
         resultsDiv.textContent = "No images found.";
         return;
       }
@@ -23,8 +30,19 @@ searchBtn.addEventListener("click", () => {
         resultsDiv.appendChild(img);
       });
     })
-    .catch(err => {
-      console.error("Error fetching from Pixabay:", err);
-      resultsDiv.textContent = "Failed to fetch images.";
+    .catch(error => {
+      console.error("Fetch error:", error);
+      resultsDiv.textContent = "Error loading images. Please try again.";
     });
+}
+
+searchBtn.addEventListener("click", () => {
+  const query = searchInput.value.trim();
+  if (query) fetchImages(query);
 });
+
+// Auto-run with default query when page loads
+window.addEventListener("load", () => {
+  fetchImages("nature");
+});
+
