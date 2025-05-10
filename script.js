@@ -1,4 +1,3 @@
-// Update Clock
 function updateTime() {
   const timeElement = document.getElementById("time");
   const currentTime = new Date();
@@ -11,7 +10,6 @@ function updateTime() {
 setInterval(updateTime, 1000);
 updateTime();
 
-// Quote Classes
 function AllQuotes() {}
 AllQuotes.prototype = {
   constructor: AllQuotes,
@@ -37,10 +35,10 @@ Quote.prototype.requestYourQuote = function () {
   let counter = 0;
 
   getQuoteButton.addEventListener("click", () => {
-    fetch('https://corsproxy.io/?https://api.quotable.io/random')
+    fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://api.quotable.io/random'))
       .then(response => response.json())
       .then(data => {
-        const randomQuote = data.content;
+        const randomQuote = JSON.parse(data.contents).content;
         quoteText.textContent = randomQuote;
         counter++;
         myCounter.textContent = counter;
