@@ -14,6 +14,9 @@
     <button id="close-panel" class="crud-button">Close</button>
     <button id="add-drug" class="crud-button">Add Drug</button>
 
+    <!-- Search Input -->
+    <input id="drug-search" placeholder="Search drugs by name, category, or strength...">
+
     <table>
       <thead>
         <tr>
@@ -31,10 +34,31 @@
   <!-- MODAL -->
   <div id="modal" class="modal">
     <div class="modal-content">
+      <h3 id="modal-title">Add New Drug</h3>
       <input id="drug-name-input" placeholder="Drug name" />
       <input id="drug-strength-input" placeholder="Strength" />
-      <input id="drug-price-input" placeholder="Price" />
-      <input id="drug-category-input" placeholder="Category" />
+      <input id="drug-price-input" placeholder="Price" type="number" />
+      <select id="drug-category-input">
+        <option value="">Select Category</option>
+        <option value="Antibiotic Oral">Antibiotic Oral</option>
+        <option value="NSAIDS">NSAIDS</option>
+        <option value="Antihypertensive">Antihypertensive</option>
+        <option value="Analgesic">Analgesic</option>
+        <option value="Vitamins">Vitamins</option>
+        <option value="Antibiotic Syrup">Antibiotic Syrup</option>
+        <option value="Cough Syrup">Cough Syrup</option>
+        <option value="Antihistamine Syrup">Antihistamine Syrup</option>
+        <option value="Antibiotic Injectable">Antibiotic Injectable</option>
+        <option value="Vitamin Injection">Vitamin Injection</option>
+        <option value="Vaccine">Vaccine</option>
+        <option value="Cream">Cream</option>
+        <option value="Ointment">Ointment</option>
+        <option value="Lotion">Lotion</option>
+        <option value="Antibiotic Drops">Antibiotic Drops</option>
+        <option value="Steroid Drops">Steroid Drops</option>
+        <option value="Analgesic Suppository">Analgesic Suppository</option>
+        <option value="Antibiotic Suppository">Antibiotic Suppository</option>
+      </select>
       <div class="modal-actions">
         <button id="save-btn" class="save-btn">Save</button>
         <button id="cancel-btn" class="cancel-btn">Cancel</button>
