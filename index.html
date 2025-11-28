@@ -2,14 +2,52 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Hello PWA</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Hello PWA + Firebase</title>
+
+  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
 </head>
-<body>
-  <h1>Hello PWA</h1>
-  <p>This is a PWA working offline!</p>
 
-  <script src="app.js"></script>
+<body>
+  <h1>Hello Firebase PWA</h1>
+
+  <input id="msgInput" placeholder="Write message...">
+  <button id="addBtn">Add</button>
+
+  <ul id="list"></ul>
+
+<!-- ================= FIREBASE ================= -->
+<script type="module">
+  // Firebase imports
+  import { initializeApp } from
+  "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+
+  import { getFirestore } from
+  "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBKITPwsPnysVklbCQVohpLHVdQvWeCE_c",
+    authDomain: "clinicmanager-ae71a.firebaseapp.com",
+    projectId: "clinicmanager-ae71a",
+    storageBucket: "clinicmanager-ae71a.appspot.com",
+    messagingSenderId: "885164323964",
+    appId: "1:885164323964:web:8d189888c139d3b9e045f9"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  window.db = getFirestore(app);
+</script>
+
+<!-- Our App JS -->
+<script src="app.js" type="module"></script>
+
+<script>
+  // Register service worker
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
+  }
+</script>
+
 </body>
-</html>
+  </html>
+  
