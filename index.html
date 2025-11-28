@@ -1,23 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hello PWA + Firebase</title>
-  <link rel="manifest" href="./manifest.json">
-  <link rel="stylesheet" href="./style.css">
+  <title>Daliya Pvt Clinic</title>
+  <link rel="stylesheet" href="./dashboard.css">
 </head>
+
 <body>
-  <h1>Hello Firebase PWA</h1>
+    <header>
+  <div class="menu">☰</div>
+  <h1>Daliya Pvt Clinic</h1>
+  <nav>
+    <ul>
+      <li><a href="pages/disease.html">Disease Management</a></li>
+      <li><a href="pages/prices.html">Drug Price Review</a></li>
+      <li><a href="pages/books.html">Medical Books</a></li>
+      <li><a href="pages/stock.html">Stock Taking</a></li>
+      <li><a href="pages/reports.html">Reports</a></li>
+      <li><a href="pages/cash.html">Cash</a></li>
+    </ul>
+  </nav>
+</header>
 
-  <input id="msgInput" placeholder="Write message...">
-  <button id="addBtn">Add</button>
+<div class="main-content">
+  <div class="container">
 
-  <ul id="list"></ul>
+    <a href="./Drugs/drugs.html" class="card">
+      <p class="icon">📁</p>
+      <p class="header-text">All Drugs/Procedures</p>
+    </a>
 
-<!-- ================= FIREBASE ================= -->
+    <a href="pages/tablets.html" class="card">
+      <p class="icon">💊</p>
+      <p class="header-text">Tablets/Capsules</p>
+    </a>
+
+    <a href="pages/syrups.html" class="card">
+      <p class="icon">🧪</p>
+      <p class="header-text">Syrups</p>
+    </a>
+
+    <a href="pages/injectables.html" class="card">
+      <p class="icon">💉</p>
+      <p class="header-text">Injectables</p>
+    </a>
+
+    <a href="pages/topical.html" class="card">
+      <p class="icon">🧴</p>
+      <p class="header-text">Topical/Lotions</p>                  
+    </a>
+
+    <a href="pages/eye.html" class="card">
+      <p class="icon">👁️</p>
+      <p class="header-text">Eye/Ear Drops</p>         
+    </a>
+
+    <a href="pages/supp.html" class="card">
+      <p class="icon">📦</p>
+      <p class="header-text">Suppositories</p>
+    </a>
+
+    <a href="pages/procedures.html" class="card">
+      <p class="icon">🩺</p>
+      <p class="header-text">Procedures</p>
+    </a>
+
+    <a href="pages/calculator.html" class="card three">
+      <p class="icon">🧮</p>
+      <p class="header-text">Calculator</p>
+    </a>
+
+    <a href="pages/alerts.html" class="card nine">
+      <p class="icon">🚨</p>
+      <p class="header-text">Drug Alerts</p>
+    </a>
+
+    <a href="pages/loans.html" class="card thirteen">
+      <p class="icon">💳</p>
+      <p class="header-text">Loans</p>
+    </a>
+
+  </div>
+</div>
+
+<!-- ================= FIREBASE CONFIGURATION ================= -->
 <script type="module">
-  // Firebase imports for Realtime Database
+  // Firebase imports
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
   import { getDatabase } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
@@ -31,18 +100,9 @@
     appId: "1:885164323964:web:8d189888c139d3b9e045f9"
   };
 
+  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   window.db = getDatabase(app);
-</script>
-
-<!-- Our App JS -->
-<script src="app.js" type="module"></script>
-
-<script>
-  // Register service worker
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js");
-  }
 </script>
 
 </body>
