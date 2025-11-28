@@ -1,32 +1,36 @@
+// Import Realtime Database
 import {
-  collection,
-  addDoc,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+  getDatabase,
+  ref,
+  push,
+  onValue
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
+// Connect to database
+const db = getDatabase();
+
+// UI elements
 const input = document.getElementById("msgInput");
 const btn = document.getElementById("addBtn");
 const list = document.getElementById("list");
 
-const messagesRef = collection(window.db, "messages");
+// Reference to messages in the database
+const messagesRef = ref(db, "messages");
 
-// Add message to Firestore
-btn.onclick = async () => {
-  await addDoc(messagesRef, { text: input.value });
+// Add message
+btn.onclick = () => {
+  if (input.value.trim() === "") return;
+  push(messagesRef, input.value);
   input.value = "";
-  loadMessages();
 };
 
-// Load all messages
-async function loadMessages() {
+// Load realtime messages
+onValue(messagesRef, (snapshot) => {
   list.innerHTML = "";
-  const snap = await getDocs(messagesRef);
-  
-  snap.forEach(doc => {
+  snapshot.forEach(child => {
     const li = document.createElement("li");
-    li.textContent = doc.data().text;
+    li.textContent = child.val();
     list.appendChild(li);
   });
-}
-
-loadMessages();
+});
+        
