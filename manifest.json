@@ -1,9 +1,11 @@
 {
-  "name": "Clinic Manager",
-  "short_name": "Clinic",
-  "start_url": ".",
+  "name": "Daliya Pvt Clinic",
+  "short_name": "Daliya Clinic",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#317EFB",
+  "background_color": "#1c3347",
+  "theme_color": "#1c3347",
+  "orientation": "any",
+  "categories": ["medical", "health", "productivity"],
   "icons": []
 }
