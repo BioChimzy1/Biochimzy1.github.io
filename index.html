@@ -18,24 +18,22 @@
 
 <!-- ================= FIREBASE ================= -->
 <script type="module">
-  // Firebase imports
-  import { initializeApp } from
-  "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-
-  import { getFirestore } from
-  "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+  // Firebase imports for Realtime Database
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+  import { getDatabase } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBKITPwsPnysVklbCQVohpLHVdQvWeCE_c",
     authDomain: "clinicmanager-ae71a.firebaseapp.com",
+    databaseURL: "https://clinicmanager-ae71a-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "clinicmanager-ae71a",
-    storageBucket: "clinicmanager-ae71a.appspot.com",
+    storageBucket: "clinicmanager-ae71a.firebasestorage.app",
     messagingSenderId: "885164323964",
     appId: "1:885164323964:web:8d189888c139d3b9e045f9"
   };
 
   const app = initializeApp(firebaseConfig);
-  window.db = getFirestore(app);
+  window.db = getDatabase(app);
 </script>
 
 <!-- Our App JS -->
@@ -49,5 +47,4 @@
 </script>
 
 </body>
-  </html>
-  
+</html>
