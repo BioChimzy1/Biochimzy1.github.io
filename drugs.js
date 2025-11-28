@@ -30,14 +30,17 @@ const categoryGroups = {
 function loadDrugsFromFirebase() {
     onValue(drugsRef, (snapshot) => {
         drugs = [];
-        snapshot.forEach((childSnapshot) => {
-            const drug = childSnapshot.val();
-            drug.id = childSnapshot.key; // Add Firebase ID
-            drugs.push(drug);
-        });
+        if (snapshot.exists()) {
+            snapshot.forEach((childSnapshot) => {
+                const drug = childSnapshot.val();
+                drug.id = childSnapshot.key;
+                drugs.push(drug);
+            });
+        }
         loadTable();
     }, (error) => {
         console.error("Error loading drugs:", error);
+        alert("Error loading drugs from database.");
     });
 }
 
@@ -84,7 +87,7 @@ function loadTable(filterCategory = null) {
     body.innerHTML = "";
 
     if (drugs.length === 0) {
-        body.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px;">No drugs found. Add your first drug!</td></tr>`;
+        body.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px; color: #666;">No drugs found. Click "Add Drug" to add your first drug!</td></tr>`;
         return;
     }
 
@@ -98,7 +101,7 @@ function loadTable(filterCategory = null) {
 
         const filteredDrugs = drugs.filter(d => d.category === filterCategory);
         if (filteredDrugs.length === 0) {
-            body.innerHTML += `<tr><td colspan="5" style="text-align: center;">No drugs in this category</td></tr>`;
+            body.innerHTML += `<tr><td colspan="5" style="text-align: center; padding: 20px;">No drugs in this category</td></tr>`;
         } else {
             filteredDrugs.forEach(drug => {
                 body.innerHTML += createDrugRow(drug);
@@ -119,21 +122,36 @@ function loadTable(filterCategory = null) {
             });
         }
     }
+
+    // Show uncategorized drugs
+    const uncategorizedDrugs = drugs.filter(d => {
+        const isCategorized = Object.values(categoryGroups).some(categories => 
+            categories.includes(d.category)
+        );
+        return !isCategorized && d.category;
+    });
+
+    if (uncategorizedDrugs.length > 0) {
+        body.innerHTML += `<tr class="group-header"><td colspan="5">Other Drugs</td></tr>`;
+        uncategorizedDrugs.forEach(drug => {
+            body.innerHTML += createDrugRow(drug);
+        });
+    }
 }
 
 function createDrugRow(drug) {
     return `
         <tr>
             <td>
-                ${drug.name}
-                <small>ID: ${drug.id}</small>
+                <strong>${drug.name}</strong>
+                ${drug.strength ? `<small>Strength: ${drug.strength}</small>` : ''}
             </td>
             <td>${drug.strength || 'N/A'}</td>
-            <td>${drug.price || 'N/A'}</td>
+            <td>${drug.price ? `$${drug.price}` : 'N/A'}</td>
             <td>${drug.category || 'Uncategorized'}</td>
             <td>
-                <button class="crud-action edit-btn" onclick="editDrug('${drug.id}')">Edit</button>
-                <button class="crud-action delete-btn" onclick="deleteDrug('${drug.id}')">Delete</button>
+                <button class="crud-action edit-btn" data-id="${drug.id}">Edit</button>
+                <button class="crud-action delete-btn" data-id="${drug.id}">Delete</button>
             </td>
         </tr>`;
 }
@@ -151,17 +169,33 @@ function filterDrugs() {
         return;
     }
 
-    for(const groupName in categoryGroups){
-        const mappedCategories = categoryGroups[groupName];
-        const filtered = drugs.filter(d =>
-            mappedCategories.includes(d.category) &&
-            (d.name.toLowerCase().includes(term) ||
-             d.category.toLowerCase().includes(term) ||
-             (d.strength && d.strength.toLowerCase().includes(term)))
-        );
-        if(filtered.length === 0) continue;
+    const filteredDrugs = drugs.filter(d =>
+        d.name.toLowerCase().includes(term) ||
+        (d.category && d.category.toLowerCase().includes(term)) ||
+        (d.strength && d.strength.toLowerCase().includes(term))
+    );
+
+    if (filteredDrugs.length === 0) {
+        body.innerHTML = `<tr><td colspan="5" style="text-align: center;">No drugs match your search</td></tr>`;
+        return;
+    }
+
+    // Group filtered results
+    const groupedResults = {};
+    filteredDrugs.forEach(drug => {
+        const groupName = Object.keys(categoryGroups).find(g =>
+            categoryGroups[g].includes(drug.category)
+        ) || 'Other Drugs';
+        
+        if (!groupedResults[groupName]) {
+            groupedResults[groupName] = [];
+        }
+        groupedResults[groupName].push(drug);
+    });
+
+    for (const groupName in groupedResults) {
         body.innerHTML += `<tr class="group-header"><td colspan="5">${groupName}</td></tr>`;
-        filtered.forEach(drug => {
+        groupedResults[groupName].forEach(drug => {
             body.innerHTML += createDrugRow(drug);
         });
     }
@@ -172,6 +206,7 @@ function filterDrugs() {
 // ==============================
 function showModal(drug = null) {
     const modal = document.getElementById("modal");
+    const modalTitle = document.getElementById("modal-title");
     const nameInput = document.getElementById("drug-name-input");
     const strengthInput = document.getElementById("drug-strength-input");
     const priceInput = document.getElementById("drug-price-input");
@@ -179,6 +214,7 @@ function showModal(drug = null) {
 
     if (drug) {
         // Edit mode
+        modalTitle.textContent = "Edit Drug";
         nameInput.value = drug.name || '';
         strengthInput.value = drug.strength || '';
         priceInput.value = drug.price || '';
@@ -186,6 +222,7 @@ function showModal(drug = null) {
         modal.currentDrugId = drug.id;
     } else {
         // Add mode
+        modalTitle.textContent = "Add New Drug";
         nameInput.value = '';
         strengthInput.value = '';
         priceInput.value = '';
@@ -194,6 +231,7 @@ function showModal(drug = null) {
     }
 
     modal.classList.add("show");
+    nameInput.focus();
 }
 
 function hideModal() {
@@ -216,8 +254,14 @@ function editDrug(drugId){
 }
 
 function deleteDrug(drugId){
-    if(confirm("Are you sure you want to delete this drug?")){
-        deleteDrugFromFirebase(drugId);
+    if(confirm("Are you sure you want to delete this drug? This action cannot be undone.")){
+        deleteDrugFromFirebase(drugId)
+            .then(() => {
+                console.log("Drug deleted successfully");
+            })
+            .catch(error => {
+                console.error("Error deleting drug:", error);
+            });
     }
 }
 
@@ -232,40 +276,53 @@ function saveDrug() {
     const price = priceInput.value.trim();
     const category = categoryInput.value.trim();
 
-    if(!name || !price || !category) {
-        alert("Please fill in all required fields: Name, Price, and Category");
+    if(!name) {
+        alert("Please enter a drug name");
+        nameInput.focus();
+        return;
+    }
+
+    if(!price) {
+        alert("Please enter a price");
+        priceInput.focus();
+        return;
+    }
+
+    if(!category) {
+        alert("Please select a category");
+        categoryInput.focus();
         return;
     }
 
     const drugData = {
         name,
-        strength,
+        strength: strength || '',
         price,
         category,
         timestamp: new Date().toISOString()
     };
 
     const modal = document.getElementById("modal");
-    if (modal.currentDrugId) {
-        // Update existing drug
-        updateDrugInFirebase(modal.currentDrugId, drugData)
-            .then(hideModal);
-    } else {
-        // Add new drug
-        addDrugToFirebase(drugData)
-            .then(hideModal);
-    }
+    const promise = modal.currentDrugId 
+        ? updateDrugInFirebase(modal.currentDrugId, drugData)
+        : addDrugToFirebase(drugData);
+
+    promise.then(() => {
+        hideModal();
+    }).catch(error => {
+        console.error("Error saving drug:", error);
+    });
 }
 
 // ==============================
 // EVENT LISTENERS
 // ==============================
 document.addEventListener("DOMContentLoaded", () => {
-    const drugPanel = document.getElementById("drug-panel");
     const addDrugBtn = document.getElementById("add-drug");
     const closePanelBtn = document.getElementById("close-panel");
     const saveBtn = document.getElementById("save-btn");
     const cancelBtn = document.getElementById("cancel-btn");
+    const searchInput = document.getElementById("drug-search");
 
     // Load drugs from Firebase
     loadDrugsFromFirebase();
@@ -279,20 +336,38 @@ document.addEventListener("DOMContentLoaded", () => {
     saveBtn.addEventListener("click", saveDrug);
     cancelBtn.addEventListener("click", hideModal);
 
-    // SEARCH INPUT
-    const searchInput = document.createElement("input");
-    searchInput.id = "drug-search";
-    searchInput.placeholder = "Search drugs by name, category, or strength...";
-    searchInput.style.cssText = `
-        width: 100%;
-        max-width: 400px;
-        margin: 0 auto 15px auto;
-        display: block;
-        padding: 10px;
-        font-size: 1rem;
-        border-radius: 8px;
-        border: 1px solid #aaa;
-    `;
-    drugPanel.insertBefore(searchInput, drugPanel.querySelector("table"));
+    // Search functionality
     searchInput.addEventListener("input", filterDrugs);
+
+    // Event delegation for edit/delete buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('edit-btn')) {
+            const drugId = e.target.getAttribute('data-id');
+            editDrug(drugId);
+        }
+        
+        if (e.target.classList.contains('delete-btn')) {
+            const drugId = e.target.getAttribute('data-id');
+            deleteDrug(drugId);
+        }
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideModal();
+        }
+    });
+
+    // Enter key support in modal
+    document.addEventListener('keydown', function(e) {
+        const modal = document.getElementById('modal');
+        if (modal.classList.contains('show')) {
+            if (e.key === 'Enter') {
+                saveDrug();
+            } else if (e.key === 'Escape') {
+                hideModal();
+            }
+        }
+    });
 });
