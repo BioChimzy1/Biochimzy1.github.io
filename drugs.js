@@ -272,7 +272,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Event listeners
     closePanelBtn.addEventListener("click", () => {
-        window.location.href = "../dashboard.html";
+        window.location.href = "./index.html";
     });
 
     addDrugBtn.addEventListener("click", addDrug);
