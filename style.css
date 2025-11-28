@@ -1,173 +1,313 @@
-/* Reset and base styles */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
-/* Ensure proper viewport scaling */
-html {
-  font-size: 16px;
-  -webkit-text-size-adjust: 100%;
+html, body {
+    height: 100vh;
+    width:100vw;
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  text-align: center;
-  margin-top: 50px;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
+    background-color: #f2f4f7;
+    font-family: Arial, sans-serif;
+    color: #222;
+    
+    
 }
 
-/* Header styling */
-h1 {
-  color: white;
-  font-size: 2.5rem;
-  margin-bottom: 30px;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-  font-weight: 600;
+.main-content{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    margin-top: 11vh;
+    height: 100vh;
+    width: 100%;
+    overflow-y: auto;
+    /*border: 3px solid blue;*/
 }
 
-/* Input container */
-.input-container {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
+.container{
+    width: 100%;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-evenly;
+    /*border: 3px solid red;*/
 }
 
-/* Message input styling */
-#msgInput {
-  padding: 15px 20px;
-  font-size: 1.1rem;
-  border: none;
-  border-radius: 25px;
-  width: 300px;
-  max-width: 100%;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  outline: none;
-  transition: all 0.3s ease;
-}
 
-#msgInput:focus {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-}
-
-#msgInput::placeholder {
-  color: #999;
-}
-
-/* Button styling */
-#addBtn {
-  padding: 15px 30px;
-  font-size: 1.1rem;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
-  font-weight: 600;
-}
-
-#addBtn:hover {
-  background: #45a049;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-}
-
-#addBtn:active {
-  transform: translateY(0);
-}
-
-/* Messages list styling */
-#list {
-  list-style: none;
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-#list li {
-  background: white;
-  padding: 15px 20px;
-  margin: 10px 0;
-  border-radius: 15px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-  font-size: 1.1rem;
-  text-align: left;
-  border-left: 5px solid #667eea;
-  transition: all 0.3s ease;
-  word-wrap: break-word;
-}
-
-#list li:hover {
-  transform: translateX(5px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-}
-
-/* Responsive design */
-@media (max-width: 600px) {
-  body {
-    margin-top: 30px;
-    padding: 15px;
-  }
-  
-  h1 {
-    font-size: 2rem;
-  }
-  
-  .input-container {
+.card {
+    border:none;
+    width: 45%;
+    /*height: 20%;*/
+    background: white;
+    border-radius: 14px;
+    display: flex;
+    justify-content: center;
+    padding: 12px;
     flex-direction: column;
     align-items: center;
-  }
-  
-  #msgInput {
-    width: 100%;
-    max-width: 300px;
-  }
-  
-  #addBtn {
-    width: 100%;
-    max-width: 300px;
-  }
-  
-  #list {
-    max-width: 100%;
-  }
-  
-  #list li {
+
+    /* Soft shadow */
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    transition: 0.25s ease;
+    
+    min-height: 120px; /* or any base height you want */
+    height: auto;
+}
+
+.icon {
+    font-size: 2rem;
+    margin-bottom: 6px;
+}
+
+/* Drug name */
+.drug-name {
+    font-weight: bold;
     font-size: 1rem;
-    padding: 12px 15px;
-  }
+    color: #1c3347;
 }
 
-@media (max-width: 400px) {
-  h1 {
-    font-size: 1.8rem;
-  }
-  
-  #msgInput, #addBtn {
-    font-size: 1rem;
-    padding: 12px 20px;
-  }
+/* Price */
+.drug-price {
+    margin-top: 4px;
+    font-size: 0.9rem;
+    color: #444;
 }
 
-/* Animation for new messages */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Hover effect */
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.25);
 }
 
-#list li {
-  animation: fadeIn 0.3s ease;
-  }
+/* ✨ Text inside card */
+.header-text {
+    font-weight: bold;
+    font-size: 1.1rem;
+    text-align: center;
+    color: #1c3347;   /* Clinic theme */
+}
+
+.three {
+    background: linear-gradient(135deg, #1c3347, #244860);
+    color: white;
+}
+
+.three .header-text {
+    font-size: 1.6rem;
+    color: white;
+}
+
+.nine{
+    background: linear-gradient(135deg, #006e3c, #009d57);
+    color: white;
+}
+
+.nine .header-text { 
+    font-size: 1.6rem;
+    color: white;
+}
+
+.thirteen{
+    background: linear-gradient(135deg, #8c1c1c, #b82a2a);
+    color: white;
+}
+
+.thirteen .header-text {
+    font-size: 1.9rem;
+    color: white;
+}
+
+/* HEADER */
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 8px 12px;
+    height: 10vh;    
+    background: #1c3347;            /* Deep clinic theme */
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    z-index: 1000;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    background: linear-gradient(135deg, #1c3347, #243e57);
+    color: white;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+    
+}
+
+.menu {
+    font-size: 32px;
+    /*border-radius: 6px;*/
+    transition: 0.3s;
+    font-size: 32px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.1);
+    transition: 0.3s;
+}
+
+.menu:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+h1 {
+    font-size: min(5vw, 1.3em);
+    text-align: center;
+    margin: 0 12px;
+    font-weight: bold;
+    padding: 4px 10px;
+    height: 100%;
+    overflow-y: auto;
+    border-left: 1px solid rgba(255,255,255,0.3);
+    border-right: 1px solid rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    
+}
+
+/* NAV */
+nav {
+    max-width: 300px;
+        
+    overflow-x: auto;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+/* INDIVIDUAL MENU ITEMS */
+nav ul li {
+    display: block;
+    cursor: pointer;
+    padding: 6px 10px;
+
+    font-size: min(4vw, 1em);
+    white-space: nowrap;
+
+    border-right: 1px solid rgba(255,255,255,0.3);
+    transition: 0.3s;
+}
+
+nav ul li:last-child {
+    border-right: none;
+}
+
+nav ul li:hover {
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+}
+
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+
+/* DESKTOP & LAPTOP VIEW – Header becomes LEFT SIDEBAR */
+/* DESKTOP & LAPTOP VIEW – Header becomes LEFT SIDEBAR */
+@media only screen and (min-width: 600px) {
+
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+
+        width: 25vw;        
+        height: 100vh;      
+        padding: 20px;
+
+        display: flex;
+        flex-direction: column;     
+        align-items: flex-start;    
+        justify-content: flex-start;
+
+        background: #1c3347;
+        box-shadow: 2px 0 6px rgba(0,0,0,0.2);
+        border-radius: 0 25px 25px 0;
+    }
+    
+    
+    .main-content {
+    width: 75vw;
+    margin: 0;
+    margin-left: 25vw;
+    overflow-x: hidden;
+    padding: 0;   /* ★ Better top & bottom spacing */
+}
+
+.card {
+    flex: 0 1 calc(33.33% - 20px);
+    height: calc((100vh - 70px) / 4);   /* Adjusted to match padding */
+}
+
+.thirteen {
+    flex: 0 1 calc(66.66% - 20px);
+    height: calc((100vh - 70px) / 4);   /* Same height for alignment */
+}
+
+
+    .container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;   /* Prevent flex spacing overflow */
+        gap: 10px;
+        overflow-x: hidden;        /* FIX overflow */
+        height: 100%;
+    }
+
+    
+
+    .menu {
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+
+    h1 {
+        font-size: 1.4em;
+        margin-bottom: 20px;
+        width: 100%;
+        text-align: left;
+        height: unset;
+        margin: 0;
+        border: none;
+    }
+    
+    nav ul {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+
+    nav ul li {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        font-size: 1em;
+    }
+    
+}
+
+
+@media only screen and (min-width: 1440px) {
+    /* Styles for large desktops and wide monitors */
+}
+
+@media only screen and (min-width: 1024px) and (max-width: 1439px) {
+    /* Styles for laptops and mid-size desktops */
+}
+
