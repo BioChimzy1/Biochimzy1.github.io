@@ -1,1 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Drug Panel - Daliya Pvt Clinic</title>
+  <link rel="stylesheet" href="./drugs.css">
+</head>
+<body>
 
+  <!-- DRUG PANEL -->
+  <div id="drug-panel" class="details-panel">
+    <h2 id="panel-title">Drug Details</h2>
+    <button id="close-panel" class="crud-button">Close</button>
+    <button id="add-drug" class="crud-button">Add Drug</button>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Strength</th>
+          <th>Price</th>
+          <th>Category</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="panel-body"></tbody>
+    </table>
+  </div>
+
+  <!-- MODAL -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <input id="drug-name-input" placeholder="Drug name" />
+      <input id="drug-strength-input" placeholder="Strength" />
+      <input id="drug-price-input" placeholder="Price" />
+      <input id="drug-category-input" placeholder="Category" />
+      <div class="modal-actions">
+        <button id="save-btn" class="save-btn">Save</button>
+        <button id="cancel-btn" class="cancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+<!-- ================= FIREBASE CONFIGURATION ================= -->
+<script type="module">
+  // Firebase imports
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+  import { getDatabase } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBKITPwsPnysVklbCQVohpLHVdQvWeCE_c",
+    authDomain: "clinicmanager-ae71a.firebaseapp.com",
+    databaseURL: "https://clinicmanager-ae71a-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "clinicmanager-ae71a",
+    storageBucket: "clinicmanager-ae71a.firebasestorage.app",
+    messagingSenderId: "885164323964",
+    appId: "1:885164323964:web:8d189888c139d3b9e045f9"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  window.db = getDatabase(app);
+</script>
+
+  <script src="./drugs.js" type="module"></script>
+</body>
+  </html>
