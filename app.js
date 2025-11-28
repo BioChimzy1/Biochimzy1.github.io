@@ -20,8 +20,13 @@ const messagesRef = ref(db, "messages");
 // Add message
 btn.onclick = () => {
   if (input.value.trim() === "") return;
-  push(messagesRef, input.value);
-  input.value = "";
+  push(messagesRef, input.value)
+    .then(() => {
+      input.value = "";
+    })
+    .catch((error) => {
+      console.error("Error writing to database: ", error);
+    });
 };
 
 // Load realtime messages
@@ -32,5 +37,6 @@ onValue(messagesRef, (snapshot) => {
     li.textContent = child.val();
     list.appendChild(li);
   });
+}, (error) => {
+  console.error("Error reading from database: ", error);
 });
-        
