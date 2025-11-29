@@ -140,7 +140,11 @@ window.addDrugToFirebase = function(drugData) {
     
     console.log('Drug added offline - will sync when online');
     showDrugsStatus('Drug added offline - will sync when online', 'info');
-    return Promise.resolve();
+    
+    // FIX: Return a resolved promise that calls hideModal
+    return Promise.resolve().then(() => {
+        hideModal();
+    });
   }
 
   return originalAddDrug(drugData);
@@ -168,7 +172,11 @@ window.updateDrugInFirebase = function(drugId, updatedData) {
     
     console.log('Drug updated offline - will sync when online');
     showDrugsStatus('Drug updated offline - will sync when online', 'info');
-    return Promise.resolve();
+    
+    // FIX: Return a resolved promise that calls hideModal
+    return Promise.resolve().then(() => {
+        hideModal();
+    });
   }
 
   return originalUpdateDrug(drugId, updatedData);
@@ -445,6 +453,13 @@ function showModal(drug = null) {
 function hideModal() {
     const modal = document.getElementById("modal");
     modal.classList.remove("show");
+    
+    // Clear the form
+    document.getElementById("drug-name-input").value = '';
+    document.getElementById("drug-strength-input").value = '';
+    document.getElementById("drug-price-input").value = '';
+    document.getElementById("drug-category-input").value = '';
+    modal.currentDrugId = null;
 }
 
 // ==============================
@@ -516,9 +531,15 @@ function saveDrug() {
         : addDrugToFirebase(drugData);
 
     promise.then(() => {
-        hideModal();
+        // FIX: hideModal is now called from within the offline functions
+        // For online operations, we still need to hide the modal here
+        if (navigator.onLine) {
+            hideModal();
+        }
     }).catch(error => {
         console.error("Error saving drug:", error);
+        // Even if there's an error online, we should hide the modal
+        hideModal();
     });
 }
 
