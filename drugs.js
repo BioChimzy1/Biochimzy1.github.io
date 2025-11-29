@@ -28,6 +28,12 @@ const categoryGroups = {
 // FIREBASE OPERATIONS
 // ==============================
 function loadDrugsFromFirebase() {
+    if (!navigator.onLine) {
+        // If offline, load from localStorage
+        loadDrugsFromLocalStorage();
+        return;
+    }
+
     onValue(drugsRef, (snapshot) => {
         drugs = [];
         if (snapshot.exists()) {
@@ -37,10 +43,13 @@ function loadDrugsFromFirebase() {
                 drugs.push(drug);
             });
         }
+        // Cache the drugs to localStorage
+        cacheDrugsToLocalStorage();
         loadTable();
     }, (error) => {
         console.error("Error loading drugs:", error);
-        alert("Error loading drugs from database.");
+        // If Firebase fails, try loading from localStorage
+        loadDrugsFromLocalStorage();
     });
 }
 
@@ -85,6 +94,25 @@ function deleteDrugFromFirebase(drugId) {
 const isOnline = navigator.onLine;
 let pendingOperations = JSON.parse(localStorage.getItem('pendingDrugOperations') || '[]');
 
+// Load drugs from localStorage when offline
+function loadDrugsFromLocalStorage() {
+    const savedDrugs = localStorage.getItem('cachedDrugs');
+    if (savedDrugs) {
+        drugs = JSON.parse(savedDrugs);
+        loadTable();
+        console.log('Loaded drugs from local storage:', drugs.length);
+        showDrugsStatus(`Loaded ${drugs.length} drugs from cache`, 'info');
+    } else {
+        showDrugsStatus('No cached drugs found. Go online to load data first.', 'warning');
+    }
+}
+
+// Save drugs to localStorage whenever we get data from Firebase
+function cacheDrugsToLocalStorage() {
+    localStorage.setItem('cachedDrugs', JSON.stringify(drugs));
+    console.log('Drugs cached to local storage');
+}
+
 // Store original functions
 const originalAddDrug = addDrugToFirebase;
 const originalUpdateDrug = updateDrugInFirebase;
@@ -105,6 +133,9 @@ window.addDrugToFirebase = function(drugData) {
     // Add to local drugs array for immediate UI update
     const tempId = 'offline-' + Date.now();
     drugs.push({ ...drugData, id: tempId });
+    
+    // Update localStorage with the new drug
+    cacheDrugsToLocalStorage();
     loadTable();
     
     console.log('Drug added offline - will sync when online');
@@ -130,6 +161,8 @@ window.updateDrugInFirebase = function(drugId, updatedData) {
     const drugIndex = drugs.findIndex(d => d.id === drugId);
     if (drugIndex !== -1) {
       drugs[drugIndex] = { ...drugs[drugIndex], ...updatedData };
+      // Update localStorage
+      cacheDrugsToLocalStorage();
       loadTable();
     }
     
@@ -155,6 +188,8 @@ window.deleteDrugFromFirebase = function(drugId) {
     const drugIndex = drugs.findIndex(d => d.id === drugId);
     if (drugIndex !== -1) {
       drugs.splice(drugIndex, 1);
+      // Update localStorage
+      cacheDrugsToLocalStorage();
       loadTable();
     }
     
