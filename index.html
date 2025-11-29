@@ -3,23 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="./manifest.json">
   <title>Daliya Pvt Clinic</title>
-  <link rel="stylesheet" href="./style.css">
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#1c3347">
+  <meta name="description" content="Daliya Private Clinic Management System">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Daliya Clinic">
+  
+  <!-- Manifest -->
+  <link rel="manifest" href="./manifest.json">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="./dashboard.css">
 </head>
 
 <body>
     <header>
   <div class="menu">☰</div>
-  <h1>Daliya Pvt Clinic</h1>
+  <h1>Daliya Pvt Clinic FROM ANOTHER BRANCH</h1>
+
   <nav>
     <ul>
-      <li><a href="pages/disease.html">Disease Management</a></li>
-      <li><a href="pages/prices.html">Drug Price Review</a></li>
-      <li><a href="pages/books.html">Medical Books</a></li>
-      <li><a href="pages/stock.html">Stock Taking</a></li>
-      <li><a href="pages/reports.html">Reports</a></li>
-      <li><a href="pages/cash.html">Cash</a></li>
+      <li><a href="#" onclick="showOfflineMessage()">Disease Management</a></li>
+      <li><a href="#" onclick="showOfflineMessage()">Drug Price Review</a></li>
+      <li><a href="#" onclick="showOfflineMessage()">Medical Books</a></li>
+      <li><a href="#" onclick="showOfflineMessage()">Stock Taking</a></li>
+      <li><a href="#" onclick="showOfflineMessage()">Reports</a></li>
+      <li><a href="#" onclick="showOfflineMessage()">Cash</a></li>
     </ul>
   </nav>
 </header>
@@ -32,52 +44,52 @@
       <p class="header-text">All Drugs/Procedures</p>
     </a>
 
-    <a href="pages/tablets.html" class="card">
+    <a href="#" class="card" onclick="showOfflineMessage()">
       <p class="icon">💊</p>
       <p class="header-text">Tablets/Capsules</p>
     </a>
 
-    <a href="pages/syrups.html" class="card">
+    <a href="#" class="card" onclick="showOfflineMessage()">
       <p class="icon">🧪</p>
       <p class="header-text">Syrups</p>
     </a>
 
-    <a href="pages/injectables.html" class="card">
+    <a href="#" class="card" onclick="showOfflineMessage()">
       <p class="icon">💉</p>
       <p class="header-text">Injectables</p>
     </a>
 
-    <a href="pages/topical.html" class="card">
+    <a href="#" class="card" onclick="showOfflineMessage()">
       <p class="icon">🧴</p>
       <p class="header-text">Topical/Lotions</p>                  
     </a>
 
-    <a href="pages/eye.html" class="card">
+    <a href="#" class="card" onclick="showOfflineMessage()">
       <p class="icon">👁️</p>
       <p class="header-text">Eye/Ear Drops</p>         
     </a>
 
-    <a href="pages/supp.html" class="card">
+    <a href="#" class="card" onclick="showOfflineMessage()">
       <p class="icon">📦</p>
       <p class="header-text">Suppositories</p>
     </a>
 
-    <a href="pages/procedures.html" class="card">
+    <a href="#" class="card" onclick="showOfflineMessage()">
       <p class="icon">🩺</p>
       <p class="header-text">Procedures</p>
     </a>
 
-    <a href="pages/calculator.html" class="card three">
+    <a href="#" class="card three" onclick="showOfflineMessage()">
       <p class="icon">🧮</p>
       <p class="header-text">Calculator</p>
     </a>
 
-    <a href="pages/alerts.html" class="card nine">
+    <a href="#" class="card nine" onclick="showOfflineMessage()">
       <p class="icon">🚨</p>
       <p class="header-text">Drug Alerts</p>
     </a>
 
-    <a href="pages/loans.html" class="card thirteen">
+    <a href="#" class="card thirteen" onclick="showOfflineMessage()">
       <p class="icon">💳</p>
       <p class="header-text">Loans</p>
     </a>
@@ -106,5 +118,69 @@
   window.db = getDatabase(app);
 </script>
 
+<!-- PWA Registration & Offline Support -->
+<script>
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        })
+        .catch(function(error) {
+          console.log('ServiceWorker registration failed: ', error);
+        });
+    });
+  }
+
+  // Online/Offline detection
+  window.addEventListener('online', function() {
+    console.log('App is online');
+    showStatus('Back online', 'success');
+  });
+
+  window.addEventListener('offline', function() {
+    console.log('App is offline');
+    showStatus('You are offline - using cached data', 'warning');
+  });
+
+  function showStatus(message, type) {
+    // Create a simple status notification
+    const statusDiv = document.createElement('div');
+    statusDiv.textContent = message;
+    statusDiv.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${type === 'success' ? '#4CAF50' : '#FF9800'};
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      z-index: 10000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      font-family: Arial, sans-serif;
+    `;
+    
+    document.body.appendChild(statusDiv);
+    
+    setTimeout(() => {
+      statusDiv.remove();
+    }, 3000);
+  }
+
+  function showOfflineMessage() {
+    if (!navigator.onLine) {
+      showStatus('This feature requires internet connection', 'warning');
+    } else {
+      showStatus('Feature coming soon!', 'info');
+    }
+  }
+
+  // Check initial connection status
+  if (!navigator.onLine) {
+    showStatus('You are offline - using cached data', 'warning');
+  }
+</script>
+
 </body>
-</html>
+                         </html>
