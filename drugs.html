@@ -88,5 +88,45 @@
 </script>
 
   <script src="./drugs.js" type="module"></script>
+
+  <!-- Offline Support Script -->
+  <script>
+    // Online/Offline detection for drugs page
+    window.addEventListener('online', function() {
+      showDrugsStatus('Back online - Syncing data...', 'success');
+    });
+
+    window.addEventListener('offline', function() {
+      showDrugsStatus('You are offline - Changes will sync when online', 'warning');
+    });
+
+    function showDrugsStatus(message, type) {
+      const statusDiv = document.createElement('div');
+      statusDiv.textContent = message;
+      statusDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#4CAF50' : '#FF9800'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        font-family: Arial, sans-serif;
+      `;
+      
+      document.body.appendChild(statusDiv);
+      
+      setTimeout(() => {
+        statusDiv.remove();
+      }, 3000);
+    }
+
+    // Check initial connection status
+    if (!navigator.onLine) {
+      showDrugsStatus('You are offline - using cached data', 'warning');
+    }
+  </script>
 </body>
   </html>
