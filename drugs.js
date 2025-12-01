@@ -25,7 +25,7 @@ const categoryGroups = {
 };
 
 // ==============================
-// FIREBASE OPERATIONS
+// FIREBASE OPERATIONS (ORIGINAL)
 // ==============================
 function loadDrugsFromFirebase() {
     if (!navigator.onLine) {
@@ -53,7 +53,8 @@ function loadDrugsFromFirebase() {
     });
 }
 
-function addDrugToFirebase(drugData) {
+// Original Firebase functions
+const originalAddDrug = function(drugData) {
     return push(drugsRef, drugData)
         .then(() => {
             console.log("Drug added successfully");
@@ -61,10 +62,11 @@ function addDrugToFirebase(drugData) {
         .catch((error) => {
             console.error("Error adding drug:", error);
             alert("Error adding drug. Please try again.");
+            throw error; // Re-throw to maintain promise chain
         });
-}
+};
 
-function updateDrugInFirebase(drugId, updatedData) {
+const originalUpdateDrug = function(drugId, updatedData) {
     const drugRef = ref(window.db, `drugs/${drugId}`);
     return update(drugRef, updatedData)
         .then(() => {
@@ -73,10 +75,11 @@ function updateDrugInFirebase(drugId, updatedData) {
         .catch((error) => {
             console.error("Error updating drug:", error);
             alert("Error updating drug. Please try again.");
+            throw error;
         });
-}
+};
 
-function deleteDrugFromFirebase(drugId) {
+const originalDeleteDrug = function(drugId) {
     const drugRef = ref(window.db, `drugs/${drugId}`);
     return remove(drugRef)
         .then(() => {
@@ -85,13 +88,13 @@ function deleteDrugFromFirebase(drugId) {
         .catch((error) => {
             console.error("Error deleting drug:", error);
             alert("Error deleting drug. Please try again.");
+            throw error;
         });
-}
+};
 
 // ==============================
-// OFFLINE SUPPORT
+// OFFLINE SUPPORT FUNCTIONS
 // ==============================
-const isOnline = navigator.onLine;
 let pendingOperations = JSON.parse(localStorage.getItem('pendingDrugOperations') || '[]');
 
 // Load drugs from localStorage when offline
@@ -113,187 +116,203 @@ function cacheDrugsToLocalStorage() {
     console.log('Drugs cached to local storage');
 }
 
-// Store original functions
-const originalAddDrug = addDrugToFirebase;
-const originalUpdateDrug = updateDrugInFirebase;
-const originalDeleteDrug = deleteDrugFromFirebase;
+// Generate a unique offline ID
+function generateOfflineId() {
+    return 'offline_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
 
-// Override the global functions with offline support
-window.addDrugToFirebase = function(drugData) {
-  if (!navigator.onLine) {
-    // Store operation for later sync
-    const operation = {
-      type: 'add',
-      data: drugData,
-      timestamp: new Date().toISOString()
-    };
-    pendingOperations.push(operation);
-    localStorage.setItem('pendingDrugOperations', JSON.stringify(pendingOperations));
-    
-    // Add to local drugs array for immediate UI update
-    const tempId = 'offline-' + Date.now();
-    drugs.push({ ...drugData, id: tempId });
-    
-    // Update localStorage with the new drug
-    cacheDrugsToLocalStorage();
-    loadTable();
-    
-    console.log('Drug added offline - will sync when online');
-    showDrugsStatus('Drug added offline - will sync when online', 'info');
-    
-    // FIX: Return a resolved promise that calls hideModal
-    return Promise.resolve().then(() => {
-        hideModal();
-    });
-  }
-
-  return originalAddDrug(drugData);
-};
-
-window.updateDrugInFirebase = function(drugId, updatedData) {
-  if (!navigator.onLine) {
-    const operation = {
-      type: 'update',
-      drugId: drugId,
-      data: updatedData,
-      timestamp: new Date().toISOString()
-    };
-    pendingOperations.push(operation);
-    localStorage.setItem('pendingDrugOperations', JSON.stringify(pendingOperations));
-    
-    // Update local drugs array
-    const drugIndex = drugs.findIndex(d => d.id === drugId);
-    if (drugIndex !== -1) {
-      drugs[drugIndex] = { ...drugs[drugIndex], ...updatedData };
-      // Update localStorage
-      cacheDrugsToLocalStorage();
-      loadTable();
+// ==============================
+// OFFLINE-ENABLED CRUD OPERATIONS
+// ==============================
+// These functions will be used throughout the app
+function addDrugToFirebase(drugData) {
+    if (!navigator.onLine) {
+        // Store operation for later sync
+        const operation = {
+            type: 'add',
+            data: drugData,
+            timestamp: new Date().toISOString(),
+            offlineId: generateOfflineId()
+        };
+        
+        pendingOperations.push(operation);
+        localStorage.setItem('pendingDrugOperations', JSON.stringify(pendingOperations));
+        
+        // Add to local drugs array for immediate UI update
+        const tempId = operation.offlineId;
+        drugs.push({ ...drugData, id: tempId, offlineId: tempId });
+        
+        // Update localStorage with the new drug
+        cacheDrugsToLocalStorage();
+        loadTable();
+        
+        console.log('Drug added offline - will sync when online');
+        showDrugsStatus('Drug added offline - will sync when online', 'info');
+        
+        // Return a resolved promise
+        return Promise.resolve();
     }
-    
-    console.log('Drug updated offline - will sync when online');
-    showDrugsStatus('Drug updated offline - will sync when online', 'info');
-    
-    // FIX: Return a resolved promise that calls hideModal
-    return Promise.resolve().then(() => {
-        hideModal();
-    });
-  }
 
-  return originalUpdateDrug(drugId, updatedData);
-};
+    // Online: use original Firebase function
+    return originalAddDrug(drugData);
+}
 
-window.deleteDrugFromFirebase = function(drugId) {
-  if (!navigator.onLine) {
-    const operation = {
-      type: 'delete',
-      drugId: drugId,
-      timestamp: new Date().toISOString()
-    };
-    pendingOperations.push(operation);
-    localStorage.setItem('pendingDrugOperations', JSON.stringify(pendingOperations));
-    
-    // Remove from local drugs array
-    const drugIndex = drugs.findIndex(d => d.id === drugId);
-    if (drugIndex !== -1) {
-      drugs.splice(drugIndex, 1);
-      // Update localStorage
-      cacheDrugsToLocalStorage();
-      loadTable();
+function updateDrugInFirebase(drugId, updatedData) {
+    if (!navigator.onLine) {
+        // Check if this is an offline-created drug
+        const isOfflineDrug = drugId.startsWith('offline_');
+        
+        const operation = {
+            type: 'update',
+            drugId: drugId,
+            data: updatedData,
+            timestamp: new Date().toISOString(),
+            isOfflineDrug: isOfflineDrug
+        };
+        
+        pendingOperations.push(operation);
+        localStorage.setItem('pendingDrugOperations', JSON.stringify(pendingOperations));
+        
+        // Update local drugs array
+        const drugIndex = drugs.findIndex(d => d.id === drugId);
+        if (drugIndex !== -1) {
+            drugs[drugIndex] = { ...drugs[drugIndex], ...updatedData };
+            // Update localStorage
+            cacheDrugsToLocalStorage();
+            loadTable();
+        }
+        
+        console.log('Drug updated offline - will sync when online');
+        showDrugsStatus('Drug updated offline - will sync when online', 'info');
+        
+        // Return a resolved promise
+        return Promise.resolve();
     }
-    
-    console.log('Drug deleted offline - will sync when online');
-    showDrugsStatus('Drug deleted offline - will sync when online', 'info');
-    return Promise.resolve();
-  }
 
-  return originalDeleteDrug(drugId);
-};
+    // Online: use original Firebase function
+    return originalUpdateDrug(drugId, updatedData);
+}
 
-// Sync pending operations when coming online
+function deleteDrugFromFirebase(drugId) {
+    if (!navigator.onLine) {
+        // Check if this is an offline-created drug
+        const isOfflineDrug = drugId.startsWith('offline_');
+        
+        const operation = {
+            type: 'delete',
+            drugId: drugId,
+            timestamp: new Date().toISOString(),
+            isOfflineDrug: isOfflineDrug
+        };
+        
+        pendingOperations.push(operation);
+        localStorage.setItem('pendingDrugOperations', JSON.stringify(pendingOperations));
+        
+        // Remove from local drugs array
+        const drugIndex = drugs.findIndex(d => d.id === drugId);
+        if (drugIndex !== -1) {
+            drugs.splice(drugIndex, 1);
+            // Update localStorage
+            cacheDrugsToLocalStorage();
+            loadTable();
+        }
+        
+        console.log('Drug deleted offline - will sync when online');
+        showDrugsStatus('Drug deleted offline - will sync when online', 'info');
+        
+        // Return a resolved promise
+        return Promise.resolve();
+    }
+
+    // Online: use original Firebase function
+    return originalDeleteDrug(drugId);
+}
+
+// ==============================
+// SYNC PENDING OPERATIONS
+// ==============================
 function syncPendingOperations() {
-  if (pendingOperations.length === 0 || !navigator.onLine) return;
+    if (pendingOperations.length === 0 || !navigator.onLine) {
+        return Promise.resolve();
+    }
 
-  showDrugsStatus('Syncing offline changes...', 'info');
-  
-  const operation = pendingOperations[0];
-  
-  if (operation.type === 'add') {
-    originalAddDrug(operation.data)
-      .then(() => {
-        pendingOperations.shift();
-        localStorage.setItem('pendingDrugOperations', JSON.stringify(pendingOperations));
-        
-        if (pendingOperations.length > 0) {
-          setTimeout(syncPendingOperations, 1000);
-        } else {
-          showDrugsStatus('All changes synced!', 'success');
+    showDrugsStatus('Syncing offline changes...', 'info');
+    
+    // Process operations one by one
+    const processNextOperation = () => {
+        if (pendingOperations.length === 0 || !navigator.onLine) {
+            showDrugsStatus('All changes synced!', 'success');
+            // Reload fresh data from Firebase
+            loadDrugsFromFirebase();
+            return Promise.resolve();
         }
-      })
-      .catch(error => {
-        console.error('Failed to sync operation:', error);
-        showDrugsStatus('Sync failed - will retry', 'warning');
-      });
-  } else if (operation.type === 'update') {
-    originalUpdateDrug(operation.drugId, operation.data)
-      .then(() => {
-        pendingOperations.shift();
-        localStorage.setItem('pendingDrugOperations', JSON.stringify(pendingOperations));
         
-        if (pendingOperations.length > 0) {
-          setTimeout(syncPendingOperations, 1000);
-        } else {
-          showDrugsStatus('All changes synced!', 'success');
-        }
-      })
-      .catch(error => {
-        console.error('Failed to sync operation:', error);
-        showDrugsStatus('Sync failed - will retry', 'warning');
-      });
-  } else if (operation.type === 'delete') {
-    originalDeleteDrug(operation.drugId)
-      .then(() => {
-        pendingOperations.shift();
-        localStorage.setItem('pendingDrugOperations', JSON.stringify(pendingOperations));
+        const operation = pendingOperations[0];
+        let promise;
         
-        if (pendingOperations.length > 0) {
-          setTimeout(syncPendingOperations, 1000);
-        } else {
-          showDrugsStatus('All changes synced!', 'success');
+        if (operation.type === 'add') {
+            promise = originalAddDrug(operation.data);
+        } else if (operation.type === 'update') {
+            // For offline-created drugs, we need to add them first, then update
+            if (operation.isOfflineDrug) {
+                showDrugsStatus('Cannot update offline-created drug. Please delete and recreate.', 'warning');
+                // Remove this operation from queue
+                pendingOperations.shift();
+                localStorage.setItem('pendingDrugOperations', JSON.stringify(pendingOperations));
+                return processNextOperation();
+            }
+            promise = originalUpdateDrug(operation.drugId, operation.data);
+        } else if (operation.type === 'delete') {
+            // For offline-created drugs, no need to delete from Firebase
+            if (operation.isOfflineDrug) {
+                pendingOperations.shift();
+                localStorage.setItem('pendingDrugOperations', JSON.stringify(pendingOperations));
+                return processNextOperation();
+            }
+            promise = originalDeleteDrug(operation.drugId);
         }
-      })
-      .catch(error => {
-        console.error('Failed to sync operation:', error);
-        showDrugsStatus('Sync failed - will retry', 'warning');
-      });
-  }
+        
+        return promise
+            .then(() => {
+                // Remove successful operation from queue
+                pendingOperations.shift();
+                localStorage.setItem('pendingDrugOperations', JSON.stringify(pendingOperations));
+                
+                // Process next operation
+                return processNextOperation();
+            })
+            .catch(error => {
+                console.error('Failed to sync operation:', error);
+                showDrugsStatus('Sync failed - will retry later', 'warning');
+                // Keep the operation in queue for retry
+                return Promise.reject(error);
+            });
+    };
+    
+    return processNextOperation();
 }
 
-// Listen for online event to sync data
-window.addEventListener('online', syncPendingOperations);
-
-// Helper function for status messages
-function showDrugsStatus(message, type) {
-  const statusDiv = document.createElement('div');
-  statusDiv.textContent = message;
-  statusDiv.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: ${type === 'success' ? '#4CAF50' : type === 'warning' ? '#FF9800' : '#2196F3'};
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    z-index: 10000;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    font-family: Arial, sans-serif;
-  `;
-  
-  document.body.appendChild(statusDiv);
-  
-  setTimeout(() => {
-    statusDiv.remove();
-  }, 3000);
+// ==============================
+// NETWORK STATUS HANDLING
+// ==============================
+function updateNetworkStatus() {
+    if (navigator.onLine) {
+        console.log('App is online');
+        // Try to sync pending operations when coming online
+        setTimeout(() => {
+            syncPendingOperations().catch(() => {
+                console.log('Sync will be retried later');
+            });
+        }, 1000);
+    } else {
+        console.log('App is offline');
+        showDrugsStatus('You are offline - changes will sync when online', 'warning');
+    }
 }
+
+// Listen for network status changes
+window.addEventListener('online', updateNetworkStatus);
+window.addEventListener('offline', updateNetworkStatus);
 
 // ==============================
 // RENDER TABLE
@@ -356,10 +375,13 @@ function loadTable(filterCategory = null) {
 }
 
 function createDrugRow(drug) {
+    const isOffline = drug.id && drug.id.startsWith('offline_');
+    const offlineBadge = isOffline ? '<span style="color: #ff9800; font-size: 0.8em;">(Offline)</span>' : '';
+    
     return `
         <tr>
             <td>
-                <strong>${drug.name}</strong>
+                <strong>${drug.name}</strong> ${offlineBadge}
                 ${drug.strength ? `<small>Strength: ${drug.strength}</small>` : ''}
             </td>
             <td>${drug.strength || 'N/A'}</td>
@@ -527,20 +549,52 @@ function saveDrug() {
 
     const modal = document.getElementById("modal");
     const promise = modal.currentDrugId 
-        ? updateDrugInFirebase(modal.currentDrugId, drugData)
-        : addDrugToFirebase(drugData);
+        ? updateDrugInFirebase(modal.currentDrugId, drugData)  // Using offline-enabled function
+        : addDrugToFirebase(drugData);  // Using offline-enabled function
 
     promise.then(() => {
-        // FIX: hideModal is now called from within the offline functions
-        // For online operations, we still need to hide the modal here
-        if (navigator.onLine) {
-            hideModal();
-        }
+        hideModal();
     }).catch(error => {
         console.error("Error saving drug:", error);
-        // Even if there's an error online, we should hide the modal
         hideModal();
     });
+}
+
+// ==============================
+// STATUS MESSAGE HELPER
+// ==============================
+function showDrugsStatus(message, type) {
+    // Remove any existing status messages
+    const existingStatus = document.querySelector('.drug-status-message');
+    if (existingStatus) {
+        existingStatus.remove();
+    }
+    
+    const statusDiv = document.createElement('div');
+    statusDiv.className = 'drug-status-message';
+    statusDiv.textContent = message;
+    statusDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#4CAF50' : type === 'warning' ? '#FF9800' : '#2196F3'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        font-family: Arial, sans-serif;
+        max-width: 300px;
+        word-wrap: break-word;
+    `;
+    
+    document.body.appendChild(statusDiv);
+    
+    setTimeout(() => {
+        if (statusDiv.parentNode) {
+            statusDiv.remove();
+        }
+    }, 3000);
 }
 
 // ==============================
@@ -553,7 +607,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const cancelBtn = document.getElementById("cancel-btn");
     const searchInput = document.getElementById("drug-search");
 
-    // Load drugs from Firebase
+    // Initial network status check
+    updateNetworkStatus();
+    
+    // Load drugs from Firebase or cache
     loadDrugsFromFirebase();
 
     // Event listeners
@@ -599,4 +656,9 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     });
+    
+    // Display pending operations count
+    if (pendingOperations.length > 0 && !navigator.onLine) {
+        showDrugsStatus(`You have ${pendingOperations.length} pending changes to sync`, 'info');
+    }
 });
