@@ -363,13 +363,12 @@ function createDrugRow(drug) {
     const isOffline = drug.id && drug.id.startsWith('offline_');
     const offlineBadge = isOffline ? '<span style="color: #ff9800; font-size: 0.8em;">(Offline)</span>' : '';
     
-    // Note: Your table has 4 columns: Name, Price per pkg, Qty per pkg, Actions
+    // Only show strength under the drug name (not category)
     return `
         <tr>
             <td>
                 <strong>${drug.name}</strong> ${offlineBadge}
                 ${drug.strength ? `<small>Strength: ${drug.strength}</small>` : ''}
-                ${drug.category && drug.category !== 'Unclassified' ? `<small>Category: ${drug.category}</small>` : ''}
             </td>
             <td>${drug.price ? `$${drug.price}` : 'N/A'}</td>
             <td>${drug.quantity ? drug.quantity : 'N/A'}</td>
@@ -668,4 +667,3 @@ document.addEventListener("DOMContentLoaded", () => {
         showDrugsStatus(`You have ${pendingOperations.length} pending changes to sync`, 'info');
     }
 });
- 
