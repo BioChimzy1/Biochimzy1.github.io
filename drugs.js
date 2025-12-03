@@ -15,14 +15,16 @@ import {
 let drugs = [];
 const drugsRef = ref(window.db, "drugs");
 
-const categoryGroups = {
-    "Tablets / Capsules": ["Antibiotic Oral", "NSAIDS", "Antihypertensive", "Analgesic", "Vitamins"],
-    "Syrups": ["Antibiotic Syrup", "Cough Syrup", "Antihistamine Syrup"],
-    "Injectables": ["Antibiotic Injectable", "Vitamin Injection", "Vaccine"],
-    "Topicals": ["Cream", "Ointment", "Lotion"],
-    "Eye/Ear Drops": ["Antibiotic Drops", "Steroid Drops"],
-    "Suppositories": ["Analgesic Suppository", "Antibiotic Suppository"]
-};
+// SIMPLIFIED CATEGORY LIST (from your HTML select options)
+const categoryOptions = [
+    "Tablets/Capsules",
+    "Syrups", 
+    "Injectables",
+    "Topical/Lotions",
+    "Eye/Ear Drops",
+    "Suppositories",
+    "Unclassified"
+];
 
 // ==============================
 // FIREBASE OPERATIONS (ORIGINAL)
@@ -315,78 +317,61 @@ window.addEventListener('online', updateNetworkStatus);
 window.addEventListener('offline', updateNetworkStatus);
 
 // ==============================
-// RENDER TABLE
+// RENDER TABLE (ADAPTED FOR YOUR HTML STRUCTURE)
 // ==============================
-function loadTable(filterCategory = null) {
+function loadTable() {
     const body = document.getElementById("panel-body");
     body.innerHTML = "";
 
     if (drugs.length === 0) {
-        body.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px; color: #666;">No drugs found. Click "Add Drug" to add your first drug!</td></tr>`;
+        body.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 40px; color: #666;">No drugs found. Click "Add Drug" to add your first drug!</td></tr>`;
         return;
     }
 
-    if(filterCategory) {
-        const groupName = Object.keys(categoryGroups).find(g =>
-            categoryGroups[g].includes(filterCategory)
-        );
-        if(groupName) {
-            body.innerHTML += `<tr class="group-header"><td colspan="5">${groupName}</td></tr>`;
+    // Group drugs by category for better organization
+    const drugsByCategory = {};
+    
+    drugs.forEach(drug => {
+        const category = drug.category || 'Unclassified';
+        if (!drugsByCategory[category]) {
+            drugsByCategory[category] = [];
         }
-
-        const filteredDrugs = drugs.filter(d => d.category === filterCategory);
-        if (filteredDrugs.length === 0) {
-            body.innerHTML += `<tr><td colspan="5" style="text-align: center; padding: 20px;">No drugs in this category</td></tr>`;
-        } else {
-            filteredDrugs.forEach(drug => {
-                body.innerHTML += createDrugRow(drug);
-            });
-        }
-        return;
-    }
-
-    // Render all drugs grouped by category
-    for(const groupName in categoryGroups){
-        const mappedCategories = categoryGroups[groupName];
-        const groupDrugs = drugs.filter(d => mappedCategories.includes(d.category));
-        
-        if(groupDrugs.length > 0) {
-            body.innerHTML += `<tr class="group-header"><td colspan="5">${groupName}</td></tr>`;
-            groupDrugs.forEach(drug => {
-                body.innerHTML += createDrugRow(drug);
-            });
-        }
-    }
-
-    // Show uncategorized drugs
-    const uncategorizedDrugs = drugs.filter(d => {
-        const isCategorized = Object.values(categoryGroups).some(categories => 
-            categories.includes(d.category)
-        );
-        return !isCategorized && d.category;
+        drugsByCategory[category].push(drug);
     });
-
-    if (uncategorizedDrugs.length > 0) {
-        body.innerHTML += `<tr class="group-header"><td colspan="5">Other Drugs</td></tr>`;
-        uncategorizedDrugs.forEach(drug => {
-            body.innerHTML += createDrugRow(drug);
-        });
-    }
+    
+    // Sort categories to show in a specific order
+    const sortedCategories = categoryOptions.concat(
+        Object.keys(drugsByCategory).filter(cat => !categoryOptions.includes(cat))
+    );
+    
+    // Render each category group
+    sortedCategories.forEach(category => {
+        const categoryDrugs = drugsByCategory[category];
+        if (categoryDrugs && categoryDrugs.length > 0) {
+            // Add category header
+            body.innerHTML += `<tr class="group-header"><td colspan="4">${category}</td></tr>`;
+            
+            // Add drugs in this category
+            categoryDrugs.forEach(drug => {
+                body.innerHTML += createDrugRow(drug);
+            });
+        }
+    });
 }
 
 function createDrugRow(drug) {
     const isOffline = drug.id && drug.id.startsWith('offline_');
     const offlineBadge = isOffline ? '<span style="color: #ff9800; font-size: 0.8em;">(Offline)</span>' : '';
     
+    // Only show strength under the drug name (not category)
     return `
         <tr>
             <td>
                 <strong>${drug.name}</strong> ${offlineBadge}
                 ${drug.strength ? `<small>Strength: ${drug.strength}</small>` : ''}
             </td>
-            <td>${drug.strength || 'N/A'}</td>
             <td>${drug.price ? `$${drug.price}` : 'N/A'}</td>
-            <td>${drug.category || 'Uncategorized'}</td>
+            <td>${drug.quantity ? drug.quantity : 'N/A'}</td>
             <td>
                 <button class="crud-action edit-btn" data-id="${drug.id}">Edit</button>
                 <button class="crud-action delete-btn" data-id="${drug.id}">Delete</button>
@@ -403,7 +388,7 @@ function filterDrugs() {
     body.innerHTML = "";
 
     if (drugs.length === 0) {
-        body.innerHTML = `<tr><td colspan="5" style="text-align: center;">No drugs found</td></tr>`;
+        body.innerHTML = `<tr><td colspan="4" style="text-align: center;">No drugs found</td></tr>`;
         return;
     }
 
@@ -414,26 +399,33 @@ function filterDrugs() {
     );
 
     if (filteredDrugs.length === 0) {
-        body.innerHTML = `<tr><td colspan="5" style="text-align: center;">No drugs match your search</td></tr>`;
+        body.innerHTML = `<tr><td colspan="4" style="text-align: center;">No drugs match your search</td></tr>`;
         return;
     }
 
-    // Group filtered results
+    // Group filtered results by category
     const groupedResults = {};
     filteredDrugs.forEach(drug => {
-        const groupName = Object.keys(categoryGroups).find(g =>
-            categoryGroups[g].includes(drug.category)
-        ) || 'Other Drugs';
-        
-        if (!groupedResults[groupName]) {
-            groupedResults[groupName] = [];
+        const category = drug.category || 'Unclassified';
+        if (!groupedResults[category]) {
+            groupedResults[category] = [];
         }
-        groupedResults[groupName].push(drug);
+        groupedResults[category].push(drug);
+    });
+    
+    // Sort categories for display
+    const sortedCategories = Object.keys(groupedResults).sort((a, b) => {
+        const indexA = categoryOptions.indexOf(a);
+        const indexB = categoryOptions.indexOf(b);
+        if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+        return a.localeCompare(b);
     });
 
-    for (const groupName in groupedResults) {
-        body.innerHTML += `<tr class="group-header"><td colspan="5">${groupName}</td></tr>`;
-        groupedResults[groupName].forEach(drug => {
+    for (const category of sortedCategories) {
+        body.innerHTML += `<tr class="group-header"><td colspan="4">${category}</td></tr>`;
+        groupedResults[category].forEach(drug => {
             body.innerHTML += createDrugRow(drug);
         });
     }
@@ -447,6 +439,7 @@ function showModal(drug = null) {
     const modalTitle = document.getElementById("modal-title");
     const nameInput = document.getElementById("drug-name-input");
     const strengthInput = document.getElementById("drug-strength-input");
+    const quantityInput = document.getElementById("drug-quantity-input");
     const priceInput = document.getElementById("drug-price-input");
     const categoryInput = document.getElementById("drug-category-input");
 
@@ -455,6 +448,7 @@ function showModal(drug = null) {
         modalTitle.textContent = "Edit Drug";
         nameInput.value = drug.name || '';
         strengthInput.value = drug.strength || '';
+        quantityInput.value = drug.quantity || '';
         priceInput.value = drug.price || '';
         categoryInput.value = drug.category || '';
         modal.currentDrugId = drug.id;
@@ -463,6 +457,7 @@ function showModal(drug = null) {
         modalTitle.textContent = "Add New Drug";
         nameInput.value = '';
         strengthInput.value = '';
+        quantityInput.value = '';
         priceInput.value = '';
         categoryInput.value = '';
         modal.currentDrugId = null;
@@ -479,6 +474,7 @@ function hideModal() {
     // Clear the form
     document.getElementById("drug-name-input").value = '';
     document.getElementById("drug-strength-input").value = '';
+    document.getElementById("drug-quantity-input").value = '';
     document.getElementById("drug-price-input").value = '';
     document.getElementById("drug-category-input").value = '';
     modal.currentDrugId = null;
@@ -513,11 +509,13 @@ function deleteDrug(drugId){
 function saveDrug() {
     const nameInput = document.getElementById("drug-name-input");
     const strengthInput = document.getElementById("drug-strength-input");
+    const quantityInput = document.getElementById("drug-quantity-input");
     const priceInput = document.getElementById("drug-price-input");
     const categoryInput = document.getElementById("drug-category-input");
 
     const name = nameInput.value.trim();
     const strength = strengthInput.value.trim();
+    const quantity = quantityInput.value.trim();
     const price = priceInput.value.trim();
     const category = categoryInput.value.trim();
 
@@ -527,8 +525,14 @@ function saveDrug() {
         return;
     }
 
+    if(!quantity) {
+        alert("Please enter quantity per package");
+        quantityInput.focus();
+        return;
+    }
+
     if(!price) {
-        alert("Please enter a price");
+        alert("Please enter price per package");
         priceInput.focus();
         return;
     }
@@ -542,7 +546,8 @@ function saveDrug() {
     const drugData = {
         name,
         strength: strength || '',
-        price,
+        quantity: parseInt(quantity) || 0,
+        price: parseFloat(price) || 0,
         category,
         timestamp: new Date().toISOString()
     };
